@@ -22,23 +22,24 @@ If it is enabled, `glue` can do `undo/redo` steps of component states.
 
 **Example**
 ```javascript
-var glue = require('glue'), component;
+let glue = require('glue'), Component, value;
 
 glue.debug.enable();
 
-component = glue.get('componentName');
+Component = glue.get('componentName');
+value = Component.get();
 
-component.set('value', 1);
-component.get('value'); // => 1
+Component.set(value.set('value', 1));
+Component.get(); // => { value: 1 }
 
-component.set('value', 2);
-component.get('value'); // => 2
+Component.set(value.set('value',2));
+Component.get(); // => { value: 2 }
 
-component.undo();
-component.get('value'); // => 1
+Component.undo();
+Component.get(); // => { value: 2 }
 
-component.redo();
-component.get('value'); // => 2
+Component.redo();
+Component.get() // => { value: 1 }
 ```
 
 **File watching**
