@@ -4,71 +4,51 @@ import { join } from 'path';
 import { assert, expect } from 'chai';
 import { List, Map, fromJS } from 'immutable';
 
-import {
-  atom,
-  set,
-  undo,
-  redo,
-  Module
-} from '../lib/module';
+import { atom, add_watch, remove_watch } from '../lib/module';
 
 describe('#Glue.module', function () {
   it('should return atom', function () {
     let moduleAtom = atom({});
 
-    expect(moduleAtom).have.property('value');
-    expect(moduleAtom).have.property('at').and.be.a('number');
-    expect(moduleAtom).have.property('history').and.instanceof(List);
+    expect(moduleAtom).be.instanceof(Map);
+    expect(moduleAtom.get('value')).be.eql({});
+    expect(moduleAtom.get('listeners')).be.eql(List());
   });
 
-  it('.Module should return module object', function () {
-    let inst = Module({});
+  it('should add listener atom', function () {
+    let moduleAtom = atom({}),
+        listener = function () {};
 
-    expect(inst).have.property('atom');
-    expect(inst).have.property('undo');
-    expect(inst).have.property('redo');
-    expect(inst).have.property('get');
-    expect(inst).have.property('set');
+    moduleAtom = add_watch(moduleAtom, listener);
+
+    let listeners = moduleAtom.get('listeners');
+
+    expect(listeners.count()).to.eql(1);
+    expect(listeners.get(0)).to.equal(listener);
   });
 
-  it('.set should incerement of statement', function () {
-    let inst = Module({});
+  it('should remove listener by index', function () {
+    let moduleAtom = atom({}),
+        listener = function () {};
 
-    inst.set({hello: 'world'});
-    assert(inst.atom.at, 1, 'Increment history state');
+    moduleAtom = remove_watch(add_watch(moduleAtom, listener), 0);
+
+    let listeners = moduleAtom.get('listeners');
+
+    expect(listeners.count()).to.eql(0);
+    expect(listeners.get(0)).to.equal(undefined);
   });
 
-  it('should store changes of atom', function () {
-    let inst = Module({});
+  it('should remove listener by function reference', function () {
+    let moduleAtom = atom({}),
+        listener = function () {};
 
-    inst.set({hello: 'world'});
-    expect(inst.get()).to.eql({hello: 'world'});
-    expect(inst.atom.history.count()).to.equal(2);
+    moduleAtom = remove_watch(add_watch(moduleAtom, listener), listener);
 
-    expect(inst.atom.history.get(0).value).to.eql({});
-    expect(inst.atom.history.get(1).value).to.eql({hello: 'world'});
+    let listeners = moduleAtom.get('listeners');
+
+    expect(listeners.count()).to.eql(0);
+    expect(listeners.get(0)).to.equal(undefined);
   });
 
-  it('should undo value', function () {
-    let inst = Module({});
-
-    inst.set({hello: 'world'});
-    expect(inst.get()).to.eql({hello: 'world'});
-
-    inst.undo();
-    expect(inst.get()).to.eql({});
-  });
-
-  it('should redo value', function () {
-    let inst = Module({});
-
-    inst.set({hello: 'world'});
-    expect(inst.get()).to.eql({hello: 'world'});
-
-    inst.undo();
-    expect(inst.get()).to.eql({});
-
-    inst.redo();
-    expect(inst.get()).to.eql({hello: 'world'});
-  });
 });
